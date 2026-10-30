@@ -2,7 +2,7 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow,noarchive"><meta name="referrer" content="no-referrer">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src https://api.github.com; base-uri 'none'; form-action 'none'">
 <title>Clashaura Admin</title>
 <style>
 :root{--bg:#10101c;--panel:#1b1b2e;--line:#33334f;--tx:#eeeefb;--mut:#9494b8;--gold:#ffc94a;--pink:#ee4b86;--ice:#8fd3ff;--ok:#43d6a0;--bad:#ff6b6b}
@@ -34,8 +34,8 @@ const b64=u=>{u=new Uint8Array(u);let s='';for(let i=0;i<u.length;i+=8192)s+=Str
 const ub=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 const uid=()=>[...crypto.getRandomValues(new Uint8Array(5))].map(b=>b.toString(16).padStart(2,'0')).join('');
 const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-const VK='clashaura_vault_v1',FK='clashaura_fail_v1',ITER=600000,IDLE=5*60*1000;
-let S=null,KEY=null,SALT=null,tab='dash',date=iso(new Date()),msg=null,idleT=null;
+const VK='clashaura_vault_v1',FK='clashaura_fail_v1',ITER=600000,IDLE=2*60*60*1000;
+let S=null,KEY=null,SALT=null,tab='dash',date=iso(new Date()),msg=null,idleT=null,lastAct=Date.now();
 
 /* ---------- crypto ---------- */
 async function derive(id,pw,salt){
@@ -54,12 +54,12 @@ async function commit(note){
  await seal();render()}
 
 /* ---------- state ---------- */
-const fresh=()=>({settings:{streakMin:25,rate:4},hosts:[],entries:[],log:[{t:new Date().toISOString(),a:'Vault created'}],offers:[
+const fresh=()=>({settings:{streakMin:25,rate:4,gh:{}},hosts:[],entries:[],log:[{t:new Date().toISOString(),a:'Vault created'}],offers:[
  {id:uid(),title:'30-Day ₹4 Club',desc:'Work 30 days and complete 800 matches in those 30 days to earn ₹4 per match.',reward:'₹4 per match',active:true},
  {id:uid(),title:'70 Matches a Day',desc:'Complete 70 matches in a day to earn ₹4 per match. LW matches are paid ₹10 each.',reward:'₹4 per match (LW: ₹10)',active:true},
  {id:uid(),title:'Best Host of the Week',desc:'The #1 host on the weekly leaderboard gets a bonus and a surprise gift.',reward:'Bonus + surprise gift',active:true},
  {id:uid(),title:'Streak Rewards',desc:'Complete at least 25 matches in a day to keep your streak. Hosts can see each other\'s streaks.',reward:'Streak badges',active:true}]});
-const norm=s=>{s=s||{};s.settings=Object.assign({streakMin:25,rate:4},s.settings);['hosts','entries','offers','log'].forEach(k=>s[k]=Array.isArray(s[k])?s[k]:[]);return s};
+const norm=s=>{s=s||{};s.settings=Object.assign({streakMin:25,rate:4,gh:{}},s.settings);s.settings.gh=s.settings.gh||{};['hosts','entries','offers','log'].forEach(k=>s[k]=Array.isArray(s[k])?s[k]:[]);return s};
 
 /* ---------- lockout ---------- */
 const fails=()=>{try{return JSON.parse(localStorage.getItem(FK))||{n:0,until:0}}catch(e){return{n:0,until:0}}};
@@ -72,9 +72,11 @@ function strong(pw,id){
 
 /* ---------- idle lock ---------- */
 function lock(why){S=null;KEY=null;SALT=null;clearTimeout(idleT);msg=why?{k:'e',t:why}:null;render()}
-function bump(){if(!S)return;clearTimeout(idleT);idleT=setTimeout(()=>lock('Locked after 5 minutes of inactivity.'),IDLE)}
+function bump(){if(!S)return;lastAct=Date.now();clearTimeout(idleT);idleT=setTimeout(()=>lock('Session expired after 2 hours of inactivity. Please sign in again.'),IDLE)}
+function chk(){if(S&&Date.now()-lastAct>=IDLE)lock('Session expired after 2 hours of inactivity. Please sign in again.')}
+setInterval(chk,30000);
 ['click','keydown','pointermove','touchstart'].forEach(e=>addEventListener(e,bump,{passive:true}));
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&S)lock('Locked when the tab was hidden.')});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});
 
 /* ---------- views ---------- */
 const M=()=>msg?`<div class="msg ${msg.k==='e'?'e':'k'}" role="status">${esc(msg.t)}</div>`:'';
@@ -120,12 +122,31 @@ function offersV(){return `<div class="card"><h2>${'Add offer'}</h2><form id="of
  ${S.offers.map(o=>`<div class="card"><label>Title</label><input value="${esc(o.title)}" maxlength="60" data-oid="${o.id}" data-of="title"><label>Details</label><textarea maxlength="400" data-oid="${o.id}" data-of="desc">${esc(o.desc)}</textarea><label>Reward line</label><input value="${esc(o.reward||'')}" maxlength="60" data-oid="${o.id}" data-of="reward">
  <p class="row"><button class="g s" data-a="toggleoffer" data-id="${o.id}">${o.active?'Live. Click to hide':'Hidden. Click to publish'}</button><button class="d s" data-a="deloffer" data-id="${o.id}">Delete</button></p></div>`).join('')}`}
 function dataV(){return `<div class="card"><h2>Publish to website</h2><p class="mut">Download data.js and upload it next to index.html on your host. Replace the old one. The website only reads this file.</p><button data-a="export">Download data.js</button></div>
- <div class="card"><h2>Settings</h2><div class="g2"><div><label for="sm">Streak: matches needed per day</label><input id="sm" type="number" min="1" value="${S.settings.streakMin}"></div><div><label for="sr">Rate per match (₹)</label><input id="sr" type="number" min="0" step="0.5" value="${S.settings.rate}"></div></div><p><button data-a="savesettings">Save settings</button></p></div>
+ <div class="card"><h2>Settings</h2><div class="g2"><div><label for="sm">Streak: matches needed per day</label><input id="sm" type="number" min="1" value="${S.settings.streakMin}"></div><div><label for="sr">Rate per match (₹)</label><input id="sr" type="number" min="0" step="0.5" value="${S.settings.rate}"></div></div><h2 style="margin-top:18px">Live publish (GitHub Pages)</h2><p class="mut">Optional. With this on, saving the Daily sheet publishes to your website automatically. The token is stored encrypted in your vault.</p>
+ <div class="g2"><div><label for="gho">GitHub username</label><input id="gho" value="${esc((S.settings.gh||{}).owner)}"></div><div><label for="ghr">Repository name</label><input id="ghr" value="${esc((S.settings.gh||{}).repo)}"></div><div><label for="ghb">Branch</label><input id="ghb" value="${esc((S.settings.gh||{}).branch||'main')}"></div><div><label for="ghp">File path</label><input id="ghp" value="${esc((S.settings.gh||{}).path||'data.js')}"></div></div>
+ <label for="ght">Access token ${((S.settings.gh||{}).token)?'(saved. Leave empty to keep it)':''}</label><input id="ght" type="password" autocomplete="new-password" placeholder="github_pat_…">
+ <p class="row"><button data-a="savesettings">Save settings</button>${ghOk()?'<button class="g" data-a="publish">Publish now</button><button class="d s" data-a="cleartoken">Remove token</button>':''}</p></div>
  <div class="card"><h2>Backup and import</h2><p class="mut">The backup is encrypted. It can only be opened with your admin ID and password.</p><p class="row"><button class="g" data-a="backup">Download encrypted backup</button></p><label for="imp">Import an existing data.js (merges into this vault, replaces current data)</label><input id="imp" type="file" accept=".js,.json"></div>
  <div class="card"><h2>Change ID or password</h2><form id="cf" autocomplete="off"><div class="g2"><div><label for="nid">New admin ID</label><input id="nid" minlength="4" required></div><div><label for="npw">New password</label><input id="npw" type="password" required autocomplete="new-password"></div></div><p><button>Change credentials</button></p></form></div>
  <div class="card"><h2>Danger zone</h2><button class="d" data-a="wipe">Erase everything on this device</button></div>
- <div class="card"><h2>Security notes</h2><p class="mut" style="margin:0">Your data is encrypted with AES-256-GCM, and the key comes from your ID and password through PBKDF2 (600,000 rounds). The admin file locks after 5 minutes idle or when the tab is hidden, and repeated wrong logins are delayed. Keep this file private. Never upload admin.html to your public site. Use a long, unique password, and keep a backup in a safe place.</p></div>`}
+ <div class="card"><h2>Security notes</h2><p class="mut" style="margin:0">Your data is encrypted with AES-256-GCM, and the key comes from your ID and password through PBKDF2 (600,000 rounds). The session ends after 2 hours of inactivity and you must sign in again. Repeated wrong logins are delayed. Keep this file private. Never upload admin.html to your public site. Use a long, unique password, and keep a backup in a safe place.</p></div>`}
 function logV(){return `<div class="card"><h2>Activity log</h2><div class="scroll"><table>${S.log.slice().reverse().map(l=>`<tr><td style="white-space:nowrap">${new Date(l.t).toLocaleString('en-IN')}</td><td>${esc(l.a)}</td></tr>`).join('')}</table></div></div>`}
+
+/* ---------- publish ---------- */
+const pubText=()=>'window.CLASHAURA='+JSON.stringify({updated:new Date().toISOString(),settings:{streakMin:S.settings.streakMin,rate:S.settings.rate},hosts:S.hosts,entries:S.entries,offers:S.offers})+';';
+const ghOk=()=>{const g=S.settings.gh||{};return g.owner&&g.repo&&g.token};
+async function publish(){
+ const g=S.settings.gh,base=`https://api.github.com/repos/${encodeURIComponent(g.owner)}/${encodeURIComponent(g.repo)}/contents/${g.path.split('/').map(encodeURIComponent).join('/')}`;
+ const H={Authorization:'Bearer '+g.token,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
+ let sha;const r=await fetch(base+'?ref='+encodeURIComponent(g.branch),{headers:H,cache:'no-store'});
+ if(r.status===200)sha=(await r.json()).sha;else if(r.status!==404)throw new Error(r.status===401||r.status===403?'GitHub rejected the token. Check its permissions.':'GitHub error '+r.status);
+ const body={message:'Update host data '+new Date().toISOString(),content:b64(enc.encode(pubText())),branch:g.branch};if(sha)body.sha=sha;
+ const w=await fetch(base,{method:'PUT',headers:{...H,'Content-Type':'application/json'},body:JSON.stringify(body)});
+ if(!w.ok)throw new Error(w.status===404?'Repo or branch not found, or token has no access.':w.status===401||w.status===403?'GitHub rejected the token. Check its permissions.':'GitHub error '+w.status)}
+async function tryPublish(){
+ if(!ghOk())return'Saved. Download data.js to publish (or set up Live publish in the Data tab).';
+ try{await publish();return'Saved and published. The website updates within about a minute.'}
+ catch(x){return'Saved here, but publishing failed: '+(x.message||'network error')}}
 
 /* ---------- actions ---------- */
 const dl=(name,text,type='application/octet-stream')=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000)};
@@ -139,12 +160,17 @@ document.addEventListener('click',async e=>{
  if(a==='savedaily'){const hs={};document.querySelectorAll('[data-h]').forEach(i=>{(hs[i.dataset.h]=hs[i.dataset.h]||{})[i.dataset.f]=i.value});
   S.entries=S.entries.filter(x=>x.d!==date||!hs[x.h]);let n=0;
   Object.entries(hs).forEach(([h,v])=>{const m=clamp(v.m,100000),p=clamp(v.p,1000000),ea=Math.max(0,Math.min(1e7,+(+v.e||0).toFixed(2)));if(m||p||ea){S.entries.push({d:date,h,m,p,e:ea});n++}});
-  msg={k:'k',t:`Saved ${n} host entries for ${date}. Download data.js to publish.`};return commit(`Saved daily sheet ${date} (${n} entries)`)}
+  const b=document.querySelector('[data-a=savedaily]');if(b){b.disabled=true;b.textContent='Saving…'}
+  await seal();const t=await tryPublish();msg={k:t.includes('failed')?'e':'k',t:`${n} entries for ${date}. ${t}`};return commit(`Saved daily sheet ${date} (${n} entries)${ghOk()?' and published':''}`)}
+ if(a==='publish'){try{await publish();msg={k:'k',t:'Published. The website updates within about a minute.'};return commit('Published to GitHub')}catch(x){msg={k:'e',t:'Publishing failed: '+(x.message||'network error')};return render()}}
  if(a==='delentry'){const[h,d]=id.split('|');if(!confirm('Delete this entry?'))return;S.entries=S.entries.filter(x=>!(x.h===h&&x.d===d));return commit(`Deleted entry ${d}`)}
  if(a==='delhost'){const h=S.hosts.find(x=>x.id===id);if(!confirm(`Remove ${h.name} and all their entries?`))return;S.hosts=S.hosts.filter(x=>x.id!==id);S.entries=S.entries.filter(x=>x.h!==id);return commit(`Removed host ${h.name}`)}
  if(a==='toggleoffer'){const o=S.offers.find(x=>x.id===id);o.active=!o.active;return commit(`${o.active?'Published':'Hid'} offer ${o.title}`)}
  if(a==='deloffer'){if(!confirm('Delete this offer?'))return;S.offers=S.offers.filter(x=>x.id!==id);return commit('Deleted offer')}
- if(a==='savesettings'){S.settings.streakMin=clamp($('#sm').value,1000)||25;S.settings.rate=Math.max(0,+$('#sr').value||0);msg={k:'k',t:'Settings saved.'};return commit('Changed settings')}
+ if(a==='savesettings'){S.settings.streakMin=clamp($('#sm').value,1000)||25;S.settings.rate=Math.max(0,+$('#sr').value||0);const g=S.settings.gh;const tk=$('#ght').value.trim();
+  g.owner=$('#gho').value.trim();g.repo=$('#ghr').value.trim();g.branch=$('#ghb').value.trim()||'main';g.path=$('#ghp').value.trim()||'data.js';if(tk)g.token=tk;
+  msg={k:'k',t:'Settings saved.'};return commit('Changed settings')}
+ if(a==='cleartoken'){S.settings.gh.token='';msg={k:'k',t:'Token removed.'};return commit('Removed GitHub token')}
  if(a==='export'){const p={updated:new Date().toISOString(),settings:{streakMin:S.settings.streakMin,rate:S.settings.rate},hosts:S.hosts,entries:S.entries,offers:S.offers};dl('data.js','window.CLASHAURA='+JSON.stringify(p)+';','text/javascript');msg={k:'k',t:'data.js downloaded. Upload it to your website.'};return commit('Exported data.js')}
  if(a==='backup'){dl('clashaura-backup-'+iso(new Date())+'.json',localStorage.getItem(VK),'application/json');msg={k:'k',t:'Encrypted backup downloaded.'};return commit('Downloaded backup')}
  if(a==='wipe'){if(prompt('Type ERASE to delete all data on this device. Make sure you have a backup.')!=='ERASE')return;localStorage.removeItem(VK);localStorage.removeItem(FK);S=null;KEY=null;msg={k:'k',t:'All data erased.'};return render()}});
