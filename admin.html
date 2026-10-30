@@ -79,9 +79,9 @@ const M=()=>msg?`<div class="msg ${msg.k==='e'?'e':'k'}" role="status">${esc(msg
 function authView(){
  const has=!!localStorage.getItem(VK),f=fails();
  $('#app').innerHTML=`<div class="card auth"><h1>CLASHAURA ADMIN</h1><p class="mut">${has?'Sign in with your admin ID and password.':'First time setup. Create your admin ID and a strong password. There is no password recovery, so keep a backup.'}</p>${M()}
- <form id="af" autocomplete="off"><label for="id">Admin ID</label><input id="id" value="clashaurahostmanagement" required minlength="4" maxlength="40" autocomplete="off" spellcheck="false">
- <label for="pw">Password</label><input id="pw" value="123sakib2010@#clash" type="password" required autocomplete="new-password">
- ${has?'':'<label for="pw2">Confirm password</label><input id="pw2" value="123sakib2010@#clash" type="password" required autocomplete="new-password"><p><small>Minimum 12 characters, with at least 3 of: lowercase, uppercase, numbers, symbols.</small></p>'}
+ <form id="af" autocomplete="off"><label for="id">Admin ID</label><input id="id" required minlength="4" maxlength="40" autocomplete="off" spellcheck="false">
+ <label for="pw">Password</label><input id="pw" type="password" required autocomplete="new-password">
+ ${has?'':'<label for="pw2">Confirm password</label><input id="pw2" type="password" required autocomplete="new-password"><p><small>Minimum 12 characters, with at least 3 of: lowercase, uppercase, numbers, symbols.</small></p>'}
  <p><button id="go">${has?'Sign in':'Create vault'}</button></p></form>
  ${has?`<hr style="border-color:var(--line)"><p><small>Restore from an encrypted backup (you must know the ID and password it was made with):</small></p><input type="file" id="rb" accept=".json">`:`<hr style="border-color:var(--line)"><p><small>Already have a backup? Restore it:</small></p><input type="file" id="rb" accept=".json">`}</div>`;
  $('#rb').onchange=async e=>{try{const t=await e.target.files[0].text();const v=JSON.parse(t);if(!v.salt||!v.iv||!v.ct)throw 0;localStorage.setItem(VK,JSON.stringify(v));msg={k:'k',t:'Backup restored. Sign in with its ID and password.'}}catch(x){msg={k:'e',t:'That is not a valid backup file.'}}authView()};
