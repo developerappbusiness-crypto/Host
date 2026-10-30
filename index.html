@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <title>Clashaura Hosts</title>
 <style>
 :root{--bg:#15122b;--panel:#1f1b3d;--line:#322d5e;--tx:#f1eeff;--mut:#9f99c9;--gold:#ffc94a;--pink:#ee4b86;--ice:#8fd3ff;--ok:#43d6a0;--r:14px}
@@ -49,8 +49,8 @@ summary .nm{flex:1}.fire{font-weight:700;color:var(--gold)}.fire.z{color:var(--m
 <main id="app"></main>
 <script src="data.js"></script>
 <script>
-const D=window.CLASHAURA||{hosts:[],entries:[],offers:[],settings:{}};
-const T=(D.settings&&D.settings.streakMin)||25;
+let D=window.CLASHAURA||{hosts:[],entries:[],offers:[],settings:{}};
+let T=25;
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 const parse=s=>{const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c)};
@@ -60,7 +60,7 @@ const inr=n=>'₹'+Number(n||0).toLocaleString('en-IN');
 const fmt=d=>d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
 const tag=h=>h.tag?`<span class="tag">${esc(h.tag)}</span>`:'';
 let wk=mon(new Date());
-const dm={};D.entries.forEach(e=>{(dm[e.h]=dm[e.h]||{})[e.d]=((dm[e.h]||{})[e.d]||0)+(+e.m||0)});
+let dm;function build(){T=(D.settings&&D.settings.streakMin)||25;dm={};D.entries.forEach(e=>{(dm[e.h]=dm[e.h]||{})[e.d]=((dm[e.h]||{})[e.d]||0)+(+e.m||0)})}build();
 function streak(id){const m=dm[id]||{};let d=new Date();if((m[iso(d)]||0)<T)d=addD(d,-1);let n=0;
  while((m[iso(d)]||0)>=T){n++;d=addD(d,-1)}
  let best=0,run=0,prev='';Object.keys(m).filter(k=>m[k]>=T).sort().forEach(k=>{run=prev&&iso(addD(parse(prev),1))===k?run+1:1;prev=k;if(run>best)best=run});return{cur:n,best}}
@@ -97,4 +97,7 @@ function go(){const p=(location.hash||'#weekly').slice(1);const k=P.some(x=>x[0]
  document.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>{wk=addD(wk,7*b.dataset.w);go()});
  if(D.updated&&!document.getElementById('upd')){const n=document.createElement('p');n.id='upd';n.className='note';n.textContent='Last updated '+new Date(D.updated).toLocaleString('en-IN');document.querySelector('main').appendChild(n)}}
 addEventListener('hashchange',go);go();
+async function poll(){try{const r=await fetch('data.js?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;const t=await r.text();
+ const j=JSON.parse(t.slice(t.indexOf('{'),t.lastIndexOf('}')+1));if(j.updated!==D.updated){D=j;build();go()}}catch(e){}}
+setInterval(poll,30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});
 </script></body></html>
