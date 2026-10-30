@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive"><meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
+<title>Clashaura Admin</title>
+<style>
+:root{--bg:#10101c;--panel:#1b1b2e;--line:#33334f;--tx:#eeeefb;--mut:#9494b8;--gold:#ffc94a;--pink:#ee4b86;--ice:#8fd3ff;--ok:#43d6a0;--bad:#ff6b6b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,"Segoe UI",Roboto,sans-serif}
+h1,h2{font-family:Impact,"Arial Black",sans-serif;font-weight:400;letter-spacing:.02em;margin:0 0 10px}h1{color:var(--gold);font-size:28px}h2{font-size:20px}
+.wrap{max-width:980px;margin:auto;padding:16px}.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.auth{max-width:420px;margin:8vh auto}
+label{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
+input,select,textarea{width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--line);background:#12121f;color:var(--tx);font:inherit}
+textarea{min-height:70px}
+button{background:var(--pink);color:#fff;border:0;border-radius:9px;padding:10px 16px;font:inherit;font-weight:600;cursor:pointer}
+button.g{background:#2b2b47;color:var(--tx);border:1px solid var(--line)}button.d{background:#5a2330}button.s{padding:5px 10px;font-size:13px}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
+.tabs{display:flex;gap:6px;overflow-x:auto;margin:10px 0 14px}.tabs button{background:#23233b;color:var(--mut);white-space:nowrap}.tabs button.on{background:var(--pink);color:#fff}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+table{width:100%;border-collapse:collapse}th,td{padding:6px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}th{color:var(--mut);font-size:13px;font-weight:600}
+td input{padding:7px 8px}.scroll{overflow-x:auto}
+.msg{padding:9px 12px;border-radius:9px;margin:10px 0;background:#2b2b47}.msg.e{background:#4a2030;color:#ffd0d0}.msg.k{background:#17402f;color:#c6f6e0}
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}.sum div{background:#12121f;border:1px solid var(--line);border-radius:10px;padding:10px}.sum b{display:block;font-size:22px;color:var(--gold)}
+small,.mut{color:var(--mut)}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+</style></head><body>
+<div class="wrap" id="app"></div>
+<script>
+if(self!==top)document.body.innerHTML='';
+const $=(s,r=document)=>r.querySelector(s),enc=new TextEncoder();
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const b64=u=>{u=new Uint8Array(u);let s='';for(let i=0;i<u.length;i+=8192)s+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return btoa(s)};
+const ub=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const uid=()=>[...crypto.getRandomValues(new Uint8Array(5))].map(b=>b.toString(16).padStart(2,'0')).join('');
+const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const VK='clashaura_vault_v1',FK='clashaura_fail_v1',ITER=600000,IDLE=5*60*1000;
+let S=null,KEY=null,SALT=null,tab='dash',date=iso(new Date()),msg=null,idleT=null;
+
+/* ---------- crypto ---------- */
+async function derive(id,pw,salt){
+ const k=await crypto.subtle.importKey('raw',enc.encode(id.trim().toLowerCase()+'\u0000'+pw),'PBKDF2',false,['deriveKey']);
+ return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:ITER,hash:'SHA-256'},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
+async function seal(){
+ const iv=crypto.getRandomValues(new Uint8Array(12));
+ const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},KEY,enc.encode(JSON.stringify(S)));
+ localStorage.setItem(VK,JSON.stringify({v:1,salt:b64(SALT),iv:b64(iv),ct:b64(ct)}))}
+async function open(id,pw,vault){
+ const salt=ub(vault.salt),key=await derive(id,pw,salt);
+ const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:ub(vault.iv)},key,ub(vault.ct));
+ return{key,salt,state:JSON.parse(new TextDecoder().decode(pt))}}
+async function commit(note){
+ if(note){S.log.push({t:new Date().toISOString(),a:note});S.log=S.log.slice(-300)}
+ await seal();render()}
+
+/* ---------- state ---------- */
+const fresh=()=>({settings:{streakMin:25,rate:4},hosts:[],entries:[],log:[{t:new Date().toISOString(),a:'Vault created'}],offers:[
+ {id:uid(),title:'30-Day ₹4 Club',desc:'Work 30 days and complete 800 matches in those 30 days to earn ₹4 per match.',reward:'₹4 per match',active:true},
+ {id:uid(),title:'70 Matches a Day',desc:'Complete 70 matches in a day to earn ₹4 per match. LW matches are paid ₹10 each.',reward:'₹4 per match (LW: ₹10)',active:true},
+ {id:uid(),title:'Best Host of the Week',desc:'The #1 host on the weekly leaderboard gets a bonus and a surprise gift.',reward:'Bonus + surprise gift',active:true},
+ {id:uid(),title:'Streak Rewards',desc:'Complete at least 25 matches in a day to keep your streak. Hosts can see each other\'s streaks.',reward:'Streak badges',active:true}]});
+const norm=s=>{s=s||{};s.settings=Object.assign({streakMin:25,rate:4},s.settings);['hosts','entries','offers','log'].forEach(k=>s[k]=Array.isArray(s[k])?s[k]:[]);return s};
+
+/* ---------- lockout ---------- */
+const fails=()=>{try{return JSON.parse(localStorage.getItem(FK))||{n:0,until:0}}catch(e){return{n:0,until:0}}};
+const setFails=f=>localStorage.setItem(FK,JSON.stringify(f));
+function strong(pw,id){
+ if(pw.length<12)return'Password must be at least 12 characters.';
+ const c=[/[a-z]/,/[A-Z]/,/\d/,/[^A-Za-z0-9]/].filter(r=>r.test(pw)).length;
+ if(c<3)return'Use at least 3 of: lowercase, uppercase, numbers, symbols.';
+ if(pw.toLowerCase().includes(id.trim().toLowerCase()))return'Password must not contain the admin ID.';return''}
+
+/* ---------- idle lock ---------- */
+function lock(why){S=null;KEY=null;SALT=null;clearTimeout(idleT);msg=why?{k:'e',t:why}:null;render()}
+function bump(){if(!S)return;clearTimeout(idleT);idleT=setTimeout(()=>lock('Locked after 5 minutes of inactivity.'),IDLE)}
+['click','keydown','pointermove','touchstart'].forEach(e=>addEventListener(e,bump,{passive:true}));
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&S)lock('Locked when the tab was hidden.')});
+
+/* ---------- views ---------- */
+const M=()=>msg?`<div class="msg ${msg.k==='e'?'e':'k'}" role="status">${esc(msg.t)}</div>`:'';
+function authView(){
+ const has=!!localStorage.getItem(VK),f=fails();
+ $('#app').innerHTML=`<div class="card auth"><h1>CLASHAURA ADMIN</h1><p class="mut">${has?'Sign in with your admin ID and password.':'First time setup. Create your admin ID and a strong password. There is no password recovery, so keep a backup.'}</p>${M()}
+ <form id="af" autocomplete="off"><label for="id">Admin ID</label><input id="id" required minlength="4" maxlength="40" autocomplete="off" spellcheck="false">
+ <label for="pw">Password</label><input id="pw" type="password" required autocomplete="new-password">
+ ${has?'':'<label for="pw2">Confirm password</label><input id="pw2" type="password" required autocomplete="new-password"><p><small>Minimum 12 characters, with at least 3 of: lowercase, uppercase, numbers, symbols.</small></p>'}
+ <p><button id="go">${has?'Sign in':'Create vault'}</button></p></form>
+ ${has?`<hr style="border-color:var(--line)"><p><small>Restore from an encrypted backup (you must know the ID and password it was made with):</small></p><input type="file" id="rb" accept=".json">`:`<hr style="border-color:var(--line)"><p><small>Already have a backup? Restore it:</small></p><input type="file" id="rb" accept=".json">`}</div>`;
+ $('#rb').onchange=async e=>{try{const t=await e.target.files[0].text();const v=JSON.parse(t);if(!v.salt||!v.iv||!v.ct)throw 0;localStorage.setItem(VK,JSON.stringify(v));msg={k:'k',t:'Backup restored. Sign in with its ID and password.'}}catch(x){msg={k:'e',t:'That is not a valid backup file.'}}authView()};
+ $('#af').onsubmit=async e=>{e.preventDefault();const id=$('#id').value,pw=$('#pw').value,btn=$('#go');
+  const f=fails();if(Date.now()<f.until){msg={k:'e',t:`Too many attempts. Try again in ${Math.ceil((f.until-Date.now())/1000)} seconds.`};return authView()}
+  btn.disabled=true;btn.textContent='Working…';
+  try{
+   if(!has){if(pw!==$('#pw2').value)throw new Error('Passwords do not match.');const w=strong(pw,id);if(w)throw new Error(w);
+    SALT=crypto.getRandomValues(new Uint8Array(16));KEY=await derive(id,pw,SALT);S=fresh();await seal();msg={k:'k',t:'Vault created. Download a backup from the Data tab.'};setFails({n:0,until:0});bump();render()}
+   else{const r=await open(id,pw,JSON.parse(localStorage.getItem(VK)));KEY=r.key;SALT=r.salt;S=norm(r.state);S.log.push({t:new Date().toISOString(),a:'Signed in'});setFails({n:0,until:0});msg=null;bump();await seal();render()}
+  }catch(x){
+   if(has){const n=f.n+1;setFails({n,until:n>=3?Date.now()+Math.min(5000*2**(n-3),900000):0});msg={k:'e',t:'Wrong ID or password.'}}
+   else msg={k:'e',t:x.message||'Could not create vault.'};
+   authView()}}}
+
+const tabs=[['dash','Dashboard'],['daily','Daily sheet'],['hosts','Hosts'],['offers','Offers'],['data','Data & security'],['log','Activity log']];
+function render(){if(!S)return authView();
+ $('#app').innerHTML=`<div class="top"><h1>CLASHAURA ADMIN</h1><button class="g" data-a="lock">Lock now</button></div><div class="tabs" role="tablist">${tabs.map(t=>`<button class="${t[0]===tab?'on':''}" data-t="${t[0]}">${t[1]}</button>`).join('')}</div>${M()}<div id="v"></div>`;
+ $('#v').innerHTML=({dash,daily,hostsV,offersV,dataV,logV})[{dash:'dash',daily:'daily',hosts:'hostsV',offers:'offersV',data:'dataV',log:'logV'}[tab]]();msg=null}
+const hn=id=>{const h=S.hosts.find(x=>x.id===id);return h?esc(h.name):'(deleted)'};
+function dash(){const t=iso(new Date()),te=S.entries.filter(e=>e.d===t);
+ const sm=k=>S.entries.reduce((a,e)=>a+(+e[k]||0),0);
+ return `<div class="card"><div class="sum"><div><b>${S.hosts.length}</b>hosts</div><div><b>${te.reduce((a,e)=>a+(+e.m||0),0)}</b>matches today</div><div><b>₹${te.reduce((a,e)=>a+(+e.e||0),0)}</b>earned today</div><div><b>₹${sm('e')}</b>total paid out</div></div></div>
+ <div class="card"><h2>Latest entries</h2><div class="scroll"><table><tr><th>Date</th><th>Host</th><th>Matches</th><th>Points</th><th>₹</th><th></th></tr>${S.entries.slice().sort((a,b)=>b.d.localeCompare(a.d)).slice(0,25).map(e=>`<tr><td>${e.d}</td><td>${hn(e.h)}</td><td>${e.m}</td><td>${e.p}</td><td>${e.e}</td><td><button class="d s" data-a="delentry" data-id="${e.h}|${e.d}">Delete</button></td></tr>`).join('')||'<tr><td colspan=6 class="mut">No entries yet. Add hosts, then use the Daily sheet.</td></tr>'}</table></div></div>`}
+function daily(){
+ const rows=S.hosts.map(h=>{const e=S.entries.find(x=>x.d===date&&x.h===h.id)||{};
+ return `<tr><td>${esc(h.name)} <small>${esc(h.tag||'')}</small></td><td><input type="number" min="0" max="100000" data-h="${h.id}" data-f="m" value="${e.m||''}"></td><td><input type="number" min="0" max="1000000" data-h="${h.id}" data-f="p" value="${e.p||''}"></td><td><input type="number" min="0" max="10000000" data-h="${h.id}" data-f="e" value="${e.e||''}"></td></tr>`}).join('');
+ return `<div class="card"><div class="row"><div><label for="dt">Date</label><input id="dt" type="date" value="${date}" max="${iso(new Date())}"></div><button class="g" data-a="auto" style="margin-top:22px">Fill ₹ = matches × ₹${S.settings.rate}</button></div>
+ <p class="mut">Enter matches, points and ₹ earned for each host. Saving replaces that day's entry for each host. Empty rows are removed. Streak counts when matches reach ${S.settings.streakMin}.</p>
+ ${S.hosts.length?`<div class="scroll"><table><tr><th>Host</th><th>Matches</th><th>Points</th><th>₹ earned</th></tr>${rows}</table></div><p><button data-a="savedaily">Save ${date}</button></p>`:'<p class="mut">Add hosts first.</p>'}</div>`}
+function hostsV(){return `<div class="card"><h2>Add host</h2><form id="hf" class="row"><input id="hname" placeholder="Host name" maxlength="30" required style="flex:2;min-width:160px"><input id="htag" placeholder="Tag (Rookie, Pro, Elite, Legend…)" maxlength="16" style="flex:1;min-width:140px"><button>Add host</button></form></div>
+ <div class="card"><h2>All hosts (${S.hosts.length})</h2><div class="scroll"><table><tr><th>Name</th><th>Tag</th><th></th></tr>${S.hosts.map(h=>`<tr><td><input value="${esc(h.name)}" maxlength="30" data-hid="${h.id}" data-hf="name"></td><td><input value="${esc(h.tag||'')}" maxlength="16" data-hid="${h.id}" data-hf="tag"></td><td><button class="d s" data-a="delhost" data-id="${h.id}">Remove</button></td></tr>`).join('')||'<tr><td colspan=3 class="mut">No hosts yet.</td></tr>'}</table></div><p><small>Edits save when you leave the field. Removing a host also deletes their entries.</small></p></div>`}
+function offersV(){return `<div class="card"><h2>${'Add offer'}</h2><form id="of"><label for="ot">Title</label><input id="ot" maxlength="60" required><label for="od">Details</label><textarea id="od" maxlength="400" required></textarea><label for="orw">Reward line (optional)</label><input id="orw" maxlength="60"><p><button>Add offer</button></p></form></div>
+ ${S.offers.map(o=>`<div class="card"><label>Title</label><input value="${esc(o.title)}" maxlength="60" data-oid="${o.id}" data-of="title"><label>Details</label><textarea maxlength="400" data-oid="${o.id}" data-of="desc">${esc(o.desc)}</textarea><label>Reward line</label><input value="${esc(o.reward||'')}" maxlength="60" data-oid="${o.id}" data-of="reward">
+ <p class="row"><button class="g s" data-a="toggleoffer" data-id="${o.id}">${o.active?'Live. Click to hide':'Hidden. Click to publish'}</button><button class="d s" data-a="deloffer" data-id="${o.id}">Delete</button></p></div>`).join('')}`}
+function dataV(){return `<div class="card"><h2>Publish to website</h2><p class="mut">Download data.js and upload it next to index.html on your host. Replace the old one. The website only reads this file.</p><button data-a="export">Download data.js</button></div>
+ <div class="card"><h2>Settings</h2><div class="g2"><div><label for="sm">Streak: matches needed per day</label><input id="sm" type="number" min="1" value="${S.settings.streakMin}"></div><div><label for="sr">Rate per match (₹)</label><input id="sr" type="number" min="0" step="0.5" value="${S.settings.rate}"></div></div><p><button data-a="savesettings">Save settings</button></p></div>
+ <div class="card"><h2>Backup and import</h2><p class="mut">The backup is encrypted. It can only be opened with your admin ID and password.</p><p class="row"><button class="g" data-a="backup">Download encrypted backup</button></p><label for="imp">Import an existing data.js (merges into this vault, replaces current data)</label><input id="imp" type="file" accept=".js,.json"></div>
+ <div class="card"><h2>Change ID or password</h2><form id="cf" autocomplete="off"><div class="g2"><div><label for="nid">New admin ID</label><input id="nid" minlength="4" required></div><div><label for="npw">New password</label><input id="npw" type="password" required autocomplete="new-password"></div></div><p><button>Change credentials</button></p></form></div>
+ <div class="card"><h2>Danger zone</h2><button class="d" data-a="wipe">Erase everything on this device</button></div>
+ <div class="card"><h2>Security notes</h2><p class="mut" style="margin:0">Your data is encrypted with AES-256-GCM, and the key comes from your ID and password through PBKDF2 (600,000 rounds). The admin file locks after 5 minutes idle or when the tab is hidden, and repeated wrong logins are delayed. Keep this file private. Never upload admin.html to your public site. Use a long, unique password, and keep a backup in a safe place.</p></div>`}
+function logV(){return `<div class="card"><h2>Activity log</h2><div class="scroll"><table>${S.log.slice().reverse().map(l=>`<tr><td style="white-space:nowrap">${new Date(l.t).toLocaleString('en-IN')}</td><td>${esc(l.a)}</td></tr>`).join('')}</table></div></div>`}
+
+/* ---------- actions ---------- */
+const dl=(name,text,type='application/octet-stream')=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000)};
+const clamp=(v,m)=>Math.max(0,Math.min(m,Math.round(+v||0)));
+document.addEventListener('click',async e=>{
+ const b=e.target.closest('button');if(!b||!S)return;
+ if(b.dataset.t){tab=b.dataset.t;return render()}
+ const a=b.dataset.a,id=b.dataset.id;if(!a)return;
+ if(a==='lock')return lock();
+ if(a==='auto'){document.querySelectorAll('[data-f=m]').forEach(m=>{const el=document.querySelector(`[data-f=e][data-h="${m.dataset.h}"]`);if(+m.value>0)el.value=+(m.value*S.settings.rate).toFixed(2)});return}
+ if(a==='savedaily'){const hs={};document.querySelectorAll('[data-h]').forEach(i=>{(hs[i.dataset.h]=hs[i.dataset.h]||{})[i.dataset.f]=i.value});
+  S.entries=S.entries.filter(x=>x.d!==date||!hs[x.h]);let n=0;
+  Object.entries(hs).forEach(([h,v])=>{const m=clamp(v.m,100000),p=clamp(v.p,1000000),ea=Math.max(0,Math.min(1e7,+(+v.e||0).toFixed(2)));if(m||p||ea){S.entries.push({d:date,h,m,p,e:ea});n++}});
+  msg={k:'k',t:`Saved ${n} host entries for ${date}. Download data.js to publish.`};return commit(`Saved daily sheet ${date} (${n} entries)`)}
+ if(a==='delentry'){const[h,d]=id.split('|');if(!confirm('Delete this entry?'))return;S.entries=S.entries.filter(x=>!(x.h===h&&x.d===d));return commit(`Deleted entry ${d}`)}
+ if(a==='delhost'){const h=S.hosts.find(x=>x.id===id);if(!confirm(`Remove ${h.name} and all their entries?`))return;S.hosts=S.hosts.filter(x=>x.id!==id);S.entries=S.entries.filter(x=>x.h!==id);return commit(`Removed host ${h.name}`)}
+ if(a==='toggleoffer'){const o=S.offers.find(x=>x.id===id);o.active=!o.active;return commit(`${o.active?'Published':'Hid'} offer ${o.title}`)}
+ if(a==='deloffer'){if(!confirm('Delete this offer?'))return;S.offers=S.offers.filter(x=>x.id!==id);return commit('Deleted offer')}
+ if(a==='savesettings'){S.settings.streakMin=clamp($('#sm').value,1000)||25;S.settings.rate=Math.max(0,+$('#sr').value||0);msg={k:'k',t:'Settings saved.'};return commit('Changed settings')}
+ if(a==='export'){const p={updated:new Date().toISOString(),settings:{streakMin:S.settings.streakMin,rate:S.settings.rate},hosts:S.hosts,entries:S.entries,offers:S.offers};dl('data.js','window.CLASHAURA='+JSON.stringify(p)+';','text/javascript');msg={k:'k',t:'data.js downloaded. Upload it to your website.'};return commit('Exported data.js')}
+ if(a==='backup'){dl('clashaura-backup-'+iso(new Date())+'.json',localStorage.getItem(VK),'application/json');msg={k:'k',t:'Encrypted backup downloaded.'};return commit('Downloaded backup')}
+ if(a==='wipe'){if(prompt('Type ERASE to delete all data on this device. Make sure you have a backup.')!=='ERASE')return;localStorage.removeItem(VK);localStorage.removeItem(FK);S=null;KEY=null;msg={k:'k',t:'All data erased.'};return render()}});
+document.addEventListener('submit',async e=>{
+ if(!S||e.target.id==='af')return;e.preventDefault();
+ if(e.target.id==='hf'){const n=$('#hname').value.trim().slice(0,30);if(S.hosts.some(h=>h.name.toLowerCase()===n.toLowerCase())){msg={k:'e',t:'A host with that name exists.'};return render()}
+  S.hosts.push({id:uid(),name:n,tag:$('#htag').value.trim().slice(0,16)});msg={k:'k',t:`Added ${n}.`};return commit(`Added host ${n}`)}
+ if(e.target.id==='of'){S.offers.push({id:uid(),title:$('#ot').value.trim(),desc:$('#od').value.trim(),reward:$('#orw').value.trim(),active:true});msg={k:'k',t:'Offer is live. Download data.js to publish.'};return commit('Added offer')}
+ if(e.target.id==='cf'){const id=$('#nid').value,pw=$('#npw').value,w=strong(pw,id);if(w){msg={k:'e',t:w};return render()}
+  SALT=crypto.getRandomValues(new Uint8Array(16));KEY=await derive(id,pw,SALT);msg={k:'k',t:'Credentials changed. Download a new backup; old backups still use the old ones.'};return commit('Changed credentials')}});
+document.addEventListener('change',async e=>{
+ if(!S)return;const t=e.target;
+ if(t.id==='dt'){date=t.value||date;return render()}
+ if(t.dataset.hid){const h=S.hosts.find(x=>x.id===t.dataset.hid);const v=t.value.trim().slice(0,t.dataset.hf==='name'?30:16);if(t.dataset.hf==='name'&&!v)return render();h[t.dataset.hf]=v;return commit('Edited host '+h.name)}
+ if(t.dataset.oid){const o=S.offers.find(x=>x.id===t.dataset.oid);o[t.dataset.of]=t.value.trim();return commit('Edited offer '+o.title)}
+ if(t.id==='imp'){try{const x=await t.files[0].text();const j=JSON.parse(x.slice(x.indexOf('{'),x.lastIndexOf('}')+1));
+  if(!Array.isArray(j.hosts)||!Array.isArray(j.entries))throw 0;if(!confirm('Replace current hosts, entries and offers with this file?'))return render();
+  const ok=/^\d{4}-\d{2}-\d{2}$/;S.hosts=j.hosts.map(h=>({id:String(h.id).slice(0,20),name:String(h.name).slice(0,30),tag:String(h.tag||'').slice(0,16)}));
+  S.entries=j.entries.filter(x=>ok.test(x.d)).map(x=>({d:x.d,h:String(x.h),m:clamp(x.m,1e5),p:clamp(x.p,1e6),e:Math.max(0,+x.e||0)}));
+  S.offers=(j.offers||[]).map(o=>({id:String(o.id||uid()),title:String(o.title||'').slice(0,60),desc:String(o.desc||'').slice(0,400),reward:String(o.reward||'').slice(0,60),active:!!o.active}));
+  if(j.settings)Object.assign(S.settings,{streakMin:clamp(j.settings.streakMin,1000)||25,rate:+j.settings.rate||0});msg={k:'k',t:'Imported.'};commit('Imported data.js')}catch(x){msg={k:'e',t:'Could not read that file.'};render()}}});
+render();
+</script></body></html>
