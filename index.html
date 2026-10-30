@@ -1,103 +1,189 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8">
+<html lang="en">
+<head>
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
-<title>Clashaura Hosts</title>
+<title>Clashaura Hosts Platform</title>
 <style>
-:root{--bg:#15122b;--panel:#1f1b3d;--line:#322d5e;--tx:#f1eeff;--mut:#9f99c9;--gold:#ffc94a;--pink:#ee4b86;--ice:#8fd3ff;--ok:#43d6a0;--r:14px}
+:root{--bg:#0d0b1a;--panel:#18152b;--panel-alt:#221e3b;--line:#2e294e;--tx:#f1eeff;--mut:#9d95c4;--gold:#ffc94a;--pink:#ee4b86;--ice:#8fd3ff;--ok:#43d6a0;--r:14px}
 *{box-sizing:border-box}html{scroll-padding-top:70px}
 body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,"Segoe UI",Roboto,sans-serif;padding-bottom:40px}
-h1,h2,.big{font-family:Impact,"Arial Black","Haettenschweiler",sans-serif;letter-spacing:.02em;font-weight:400}
+h1,h2,.big{font-family:Impact,"Arial Black",sans-serif;letter-spacing:.02em;font-weight:400}
 header{padding:22px 16px 8px;max-width:860px;margin:auto}
 h1{font-size:34px;margin:0;color:var(--gold)}header p{margin:2px 0 0;color:var(--mut)}
-nav{position:sticky;top:0;background:var(--bg);z-index:5;border-bottom:1px solid var(--line)}
+nav{position:sticky;top:0;background:rgba(13,11,26,.92);backdrop-filter:blur(10px);z-index:5;border-bottom:1px solid var(--line)}
 nav div{max-width:860px;margin:auto;display:flex;gap:6px;padding:10px 12px;overflow-x:auto}
-nav a{color:var(--mut);text-decoration:none;padding:8px 14px;border-radius:99px;white-space:nowrap;font-weight:600}
-nav a.on{background:var(--pink);color:#fff}
-nav a:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
+nav a{color:var(--mut);text-decoration:none;padding:8px 14px;border-radius:99px;white-space:nowrap;font-weight:600;font-size:14px;transition:all .2s}
+nav a.on{background:var(--pink);color:#fff;box-shadow:0 0 12px rgba(238,75,134,.4)}
 main{max-width:860px;margin:auto;padding:16px}
 .bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px}
-button{background:var(--panel);color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:8px 14px;font:inherit;cursor:pointer}
-.tag{display:inline-block;font-size:12px;background:#3a3470;color:var(--ice);padding:2px 9px;border-radius:99px;margin-left:6px;vertical-align:middle}
-.pod{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:8px;align-items:end;margin:22px 0}
-.st{background:var(--panel);border:1px solid var(--line);border-radius:var(--r) var(--r) 0 0;text-align:center;padding:12px 6px}
+button{background:var(--panel-alt);color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:8px 14px;font:inherit;cursor:pointer}
+.tag{display:inline-block;font-size:11px;background:#3a3470;color:var(--ice);padding:2px 8px;border-radius:99px;margin-left:6px;font-weight:600}
+.pod{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:10px;align-items:end;margin:22px 0}
+.st{background:var(--panel);border:1px solid var(--line);border-radius:var(--r) var(--r) 0 0;text-align:center;padding:14px 8px;cursor:pointer;transition:transform .2s}
+.st:hover{transform:translateY(-3px)}
 .st .n{font-family:Impact,"Arial Black",sans-serif;font-size:40px;line-height:1}
 .st .nm{font-weight:700;word-break:break-word;margin-top:6px}
-.st .pt{color:var(--mut);font-size:14px}
-.s1{min-height:190px;border-color:var(--gold);background:linear-gradient(#3b3260,var(--panel))}.s1 .n{color:var(--gold);font-size:52px}
-.s2{min-height:150px}.s2 .n{color:var(--ice)}.s3{min-height:120px}.s3 .n{color:#e3a074}
-.row{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 14px;margin-bottom:8px}
+.st .pt{color:var(--mut);font-size:13px;margin-top:2px}
+.s1{min-height:200px;border-color:var(--gold);background:linear-gradient(180deg,#3b3260,var(--panel))}.s1 .n{color:var(--gold);font-size:52px}
+.s2{min-height:160px;border-color:var(--ice)}.s2 .n{color:var(--ice)}
+.s3{min-height:130px;border-color:#e3a074}.s3 .n{color:#e3a074}
+.row{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:border-color .2s}
+.row:hover{border-color:var(--ice)}
 .row .rk{width:30px;color:var(--mut);font-weight:700}.row .nm{flex:1;min-width:0;word-break:break-word}.row .v{font-weight:700;color:var(--gold)}
-.sum{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}.sum div{flex:1;min-width:130px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+.sum{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}.sum div{flex:1;min-width:130px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
 .sum b{display:block;font-size:22px;color:var(--gold)}
 input[type=search]{width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--tx);font:inherit;margin-bottom:12px}
-.offer{background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--pink);border-radius:12px;padding:14px 16px;margin-bottom:12px}
-.offer h3{margin:0 0 4px;font-size:18px}.offer p{margin:4px 0;color:var(--mut)}.offer .rw{color:var(--gold);font-weight:700}
+.offer{background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--pink);border-radius:12px;padding:16px;margin-bottom:12px}
+.offer h3{margin:0 0 6px;font-size:18px;color:var(--gold)}.offer p{margin:4px 0;color:var(--mut)}.offer .rw{color:var(--ice);font-weight:700;margin-top:8px}
 details{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:8px}
-summary{cursor:pointer;padding:12px 14px;display:flex;gap:12px;align-items:center;list-style:none}summary::-webkit-details-marker{display:none}
+summary{cursor:pointer;padding:12px 14px;display:flex;gap:12px;align-items:center;list-style:none}
 summary .nm{flex:1}.fire{font-weight:700;color:var(--gold)}.fire.z{color:var(--mut)}
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;padding:4px 14px 14px}
 .cal i{font-style:normal;text-align:center;font-size:11px;color:var(--mut)}
-.cal b{aspect-ratio:1;border-radius:7px;background:#2a2550;display:grid;place-items:center;font-size:11px;color:var(--mut);font-weight:400}
+.cal b{aspect-ratio:1;border-radius:7px;background:#241f42;display:grid;place-items:center;font-size:11px;color:var(--mut);font-weight:400}
 .cal b.h{background:var(--ok);color:#06281c;font-weight:700}.cal b.p{background:#6b5a2f;color:#ffe2a0}.cal b.t{outline:2px solid var(--ice)}
 .empty{color:var(--mut);text-align:center;padding:30px 10px}.note{color:var(--mut);font-size:13px;margin-top:14px}
-@media(max-width:480px){h1{font-size:28px}.st .n{font-size:32px}.s1 .n{font-size:42px}}
-@media(prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
-</style></head><body>
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:16px;z-index:100;backdrop-filter:blur(4px)}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:16px;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;padding:20px;position:relative}
+.modal-close{position:absolute;top:14px;right:14px;background:none;border:0;color:var(--mut);font-size:22px;cursor:pointer}
+</style>
+</head>
+<body>
 <header><h1>CLASHAURA HOSTS</h1><p>Grow together. Earn together.</p></header>
 <nav><div id="nav"></div></nav>
 <main id="app"></main>
-<script src="data.js"></script>
+<div id="modal-container"></div>
+
+<!-- Data script loaded with timestamp parameter to bypass browser caching -->
+<script src="data.js?v=20261030"></script>
 <script>
-let D=window.CLASHAURA||{hosts:[],entries:[],offers:[],settings:{}};
-let T=25;
-const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-const parse=s=>{const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c)};
-const addD=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
-const mon=d=>addD(d,-((d.getDay()+6)%7));
-const inr=n=>'₹'+Number(n||0).toLocaleString('en-IN');
-const fmt=d=>d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
-const tag=h=>h.tag?`<span class="tag">${esc(h.tag)}</span>`:'';
-let wk=mon(new Date());
-let dm;function build(){T=(D.settings&&D.settings.streakMin)||25;dm={};D.entries.forEach(e=>{(dm[e.h]=dm[e.h]||{})[e.d]=((dm[e.h]||{})[e.d]||0)+(+e.m||0)})}build();
-function streak(id){const m=dm[id]||{};let d=new Date();if((m[iso(d)]||0)<T)d=addD(d,-1);let n=0;
- while((m[iso(d)]||0)>=T){n++;d=addD(d,-1)}
- let best=0,run=0,prev='';Object.keys(m).filter(k=>m[k]>=T).sort().forEach(k=>{run=prev&&iso(addD(parse(prev),1))===k?run+1:1;prev=k;if(run>best)best=run});return{cur:n,best}}
-function weekly(){const a=iso(wk),b=iso(addD(wk,6));const p={};
- D.entries.forEach(e=>{if(e.d>=a&&e.d<=b)p[e.h]=(p[e.h]||0)+(+e.p||0)});
- return D.hosts.map(h=>({h,v:p[h.id]||0})).sort((x,y)=>y.v-x.v||x.h.name.localeCompare(y.h.name))}
-function vWeekly(){const L=weekly();const top=L.slice(0,3);
- const st=(i,c)=>top[i]?`<div class="st ${c}"><div class="n">${i+1}</div><div class="nm">${esc(top[i].h.name)}</div>${tag(top[i].h)}<div class="pt">${top[i].v} pts</div></div>`:'<div></div>';
- return `<div class="bar"><button data-w="-1" aria-label="Previous week">‹ Prev</button><h2 style="margin:0;font-size:22px">${fmt(wk)} – ${fmt(addD(wk,6))}</h2><button data-w="1" aria-label="Next week">Next ›</button></div>`+
- (L.length?`<div class="pod">${st(1,'s2')}${st(0,'s1')}${st(2,'s3')}</div>`+L.slice(3).map((x,i)=>`<div class="row"><span class="rk">${i+4}</span><span class="nm">${esc(x.h.name)}${tag(x.h)}</span><span class="v">${x.v} pts</span></div>`).join(''):'<div class="empty">No hosts yet.</div>')+
- '<p class="note">Points are added by the admin every day. Weeks run Monday to Sunday.</p>'}
-function vLife(q=''){const m={},e={};D.entries.forEach(x=>{m[x.h]=(m[x.h]||0)+(+x.m||0);e[x.h]=(e[x.h]||0)+(+x.e||0)});
- const L=D.hosts.map(h=>({h,m:m[h.id]||0,e:e[h.id]||0})).sort((a,b)=>b.e-a.e);
- const tot=L.reduce((s,x)=>s+x.e,0),tm=L.reduce((s,x)=>s+x.m,0);
- return `<div class="sum"><div><b>${inr(tot)}</b>earned by all hosts</div><div><b>${tm.toLocaleString('en-IN')}</b>matches hosted</div><div><b>${L.length}</b>hosts</div></div><input type="search" id="q" placeholder="Search host name" value="${esc(q)}" aria-label="Search host">`+
- '<div id="ll">'+lifeRows(L,q)+'</div>'}
-function lifeRows(L,q){const r=L.map((x,i)=>({...x,i})).filter(x=>x.h.name.toLowerCase().includes(q.toLowerCase()));
- return r.length?r.map(x=>`<div class="row"><span class="rk">${x.i+1}</span><span class="nm">${esc(x.h.name)}${tag(x.h)}<br><small style="color:var(--mut)">${x.m.toLocaleString('en-IN')} matches</small></span><span class="v">${inr(x.e)}</span></div>`).join(''):'<div class="empty">No host found.</div>'}
-function vOffers(){const o=(D.offers||[]).filter(x=>x.active);
- return o.length?o.map(x=>`<div class="offer"><h3>${esc(x.title)}</h3><p>${esc(x.desc)}</p>${x.reward?`<p class="rw">${esc(x.reward)}</p>`:''}</div>`).join(''):'<div class="empty">No live offers right now. Check back soon.</div>'}
-function cal(id){const m=dm[id]||{};const t=new Date();const s=mon(addD(t,-34));let h='';
- 'MTWTFSS'.split('').forEach(d=>h+=`<i>${d}</i>`);
- for(let i=0;i<42;i++){const d=addD(s,i);if(d>t)break;const k=iso(d),v=m[k]||0;
-  h+=`<b class="${v>=T?'h':v>0?'p':''} ${k===iso(t)?'t':''}" title="${fmt(d)}: ${v} matches">${d.getDate()}</b>`}return `<div class="cal">${h}</div>`}
-function vStreak(){const L=D.hosts.map(h=>({h,s:streak(h.id)})).sort((a,b)=>b.s.cur-a.s.cur||b.s.best-a.s.best);
- return `<p style="color:var(--mut);margin-top:0">Complete at least <b style="color:var(--tx)">${T} matches in a day</b> to keep your streak. Green days count. Gold days were below ${T}.</p>`+
- (L.length?L.map(x=>`<details><summary><span class="nm">${esc(x.h.name)}${tag(x.h)}</span><span class="fire ${x.s.cur?'':'z'}">${x.s.cur?'🔥 '+x.s.cur+' days':'No streak'}</span><small style="color:var(--mut)">best ${x.s.best}</small></summary>${cal(x.h.id)}</details>`).join(''):'<div class="empty">No hosts yet.</div>')}
-const P=[['weekly','Weekly leaderboard'],['lifetime','Lifetime earnings'],['offers','Live offers'],['streaks','Streaks']];
-function go(){const p=(location.hash||'#weekly').slice(1);const k=P.some(x=>x[0]===p)?p:'weekly';
- document.getElementById('nav').innerHTML=P.map(x=>`<a href="#${x[0]}" class="${x[0]===k?'on':''}">${x[1]}</a>`).join('');
- document.getElementById('app').innerHTML={weekly:vWeekly,lifetime:()=>vLife(),offers:vOffers,streaks:vStreak}[k]();
- const q=document.getElementById('q');if(q)q.oninput=()=>{const m={},e={};D.entries.forEach(x=>{m[x.h]=(m[x.h]||0)+(+x.m||0);e[x.h]=(e[x.h]||0)+(+x.e||0)});
-  document.getElementById('ll').innerHTML=lifeRows(D.hosts.map(h=>({h,m:m[h.id]||0,e:e[h.id]||0})).sort((a,b)=>b.e-a.e),q.value)};
- document.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>{wk=addD(wk,7*b.dataset.w);go()});
- if(D.updated&&!document.getElementById('upd')){const n=document.createElement('p');n.id='upd';n.className='note';n.textContent='Last updated '+new Date(D.updated).toLocaleString('en-IN');document.querySelector('main').appendChild(n)}}
-addEventListener('hashchange',go);go();
-async function poll(){try{const r=await fetch('data.js?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;const t=await r.text();
- const j=JSON.parse(t.slice(t.indexOf('{'),t.lastIndexOf('}')+1));if(j.updated!==D.updated){D=j;build();go()}}catch(e){}}
-setInterval(poll,30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});
-</script></body></html>
+const D = window.CLASHAURA || { hosts:[], entries:[], offers:[], settings:{ streakMin: 25, rate: 4 } };
+const T = (D.settings && D.settings.streakMin) || 25;
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const iso = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const addD = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const mon = d => addD(d, -((d.getDay() + 6) % 7));
+const inr = n => '₹' + Number(n || 0).toLocaleString('en-IN');
+const fmt = d => d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+const tag = h => h.tag ? `<span class="tag">${esc(h.tag)}</span>` : '';
+
+let wk = mon(new Date());
+const dm = {};
+(D.entries || []).forEach(e => { (dm[e.h] = dm[e.h] || {})[e.d] = ((dm[e.h] || {})[e.d] || 0) + (+e.m || 0); });
+
+function streak(id) {
+  const m = dm[id] || {};
+  let d = new Date();
+  if ((m[iso(d)] || 0) < T) d = addD(d, -1);
+  let n = 0;
+  while ((m[iso(d)] || 0) >= T) { n++; d = addD(d, -1); }
+  let best = 0, run = 0, prev = '';
+  Object.keys(m).filter(k => m[k] >= T).sort().forEach(k => {
+    run = prev && iso(addD(new Date(prev), 1)) === k ? run + 1 : 1;
+    prev = k;
+    if (run > best) best = run;
+  });
+  return { cur: n, best };
+}
+
+function weekly() {
+  const a = iso(wk), b = iso(addD(wk, 6));
+  const p = {};
+  (D.entries || []).forEach(e => { if (e.d >= a && e.d <= b) p[e.h] = (p[e.h] || 0) + (+e.p || 0); });
+  return (D.hosts || []).map(h => ({ h, v: p[h.id] || 0 })).sort((x, y) => y.v - x.v || x.h.name.localeCompare(y.h.name));
+}
+
+function vWeekly() {
+  const L = weekly();
+  const top = L.slice(0, 3);
+  const st = (i, c) => top[i] ? `<div class="st ${c}" onclick="showHost('${top[i].h.id}')"><div class="n">${i+1}</div><div class="nm">${esc(top[i].h.name)}</div>${tag(top[i].h)}<div class="pt">${top[i].v} pts</div></div>` : '<div></div>';
+  return `<div class="bar"><button onclick="moveWk(-1)">‹ Prev</button><h2 style="margin:0;font-size:20px">${fmt(wk)} – ${fmt(addD(wk,6))}</h2><button onclick="moveWk(1)">Next ›</button></div>` +
+  (L.length ? `<div class="pod">${st(1,'s2')}${st(0,'s1')}${st(2,'s3')}</div>` + L.slice(3).map((x, i) => `<div class="row" onclick="showHost('${x.h.id}')"><span class="rk">${i+4}</span><span class="nm">${esc(x.h.name)}${tag(x.h)}</span><span class="v">${x.v} pts</span></div>`).join('') : '<div class="empty">No host leaderboard entries for this week.</div>') +
+  '<p class="note">Points are updated daily by admin. Weeks run Monday to Sunday.</p>';
+}
+
+function moveWk(dir) { wk = addD(wk, 7 * dir); go(); }
+
+function vLife() {
+  const m = {}, e = {};
+  (D.entries || []).forEach(x => { m[x.h] = (m[x.h] || 0) + (+x.m || 0); e[x.h] = (e[x.h] || 0) + (+x.e || 0); });
+  const L = (D.hosts || []).map(h => ({ h, m: m[h.id] || 0, e: e[h.id] || 0 })).sort((a, b) => b.e - a.e);
+  const tot = L.reduce((s, x) => s + x.e, 0), tm = L.reduce((s, x) => s + x.m, 0);
+  return `<div class="sum"><div><b>${inr(tot)}</b>earned by all hosts</div><div><b>${tm.toLocaleString('en-IN')}</b>matches hosted</div><div><b>${L.length}</b>active hosts</div></div>` +
+  `<input type="search" id="q" placeholder="Search host by name..." oninput="filterLife()" aria-label="Search host">` +
+  '<div id="ll">' + lifeRows(L, '') + '</div>';
+}
+
+function lifeRows(L, q) {
+  const r = L.map((x, i) => ({ ...x, i })).filter(x => x.h.name.toLowerCase().includes(q.toLowerCase()));
+  return r.length ? r.map(x => `<div class="row" onclick="showHost('${x.h.id}')"><span class="rk">${x.i+1}</span><span class="nm">${esc(x.h.name)}${tag(x.h)}<br><small style="color:var(--mut)">${x.m.toLocaleString('en-IN')} matches</small></span><span class="v">${inr(x.e)}</span></div>`).join('') : '<div class="empty">No matching host found.</div>';
+}
+
+function filterLife() {
+  const q = document.getElementById('q').value;
+  const m = {}, e = {};
+  (D.entries || []).forEach(x => { m[x.h] = (m[x.h] || 0) + (+x.m || 0); e[x.h] = (e[x.h] || 0) + (+x.e || 0); });
+  const L = (D.hosts || []).map(h => ({ h, m: m[h.id] || 0, e: e[h.id] || 0 })).sort((a, b) => b.e - a.e);
+  document.getElementById('ll').innerHTML = lifeRows(L, q);
+}
+
+function vOffers() {
+  const o = (D.offers || []).filter(x => x.active);
+  return o.length ? o.map(x => `<div class="offer"><h3>${esc(x.title)}</h3><p>${esc(x.desc)}</p>${x.reward ? `<p class="rw">${esc(x.reward)}</p>` : ''}</div>`).join('') : '<div class="empty">No promotional offers active right now.</div>';
+}
+
+function cal(id) {
+  const m = dm[id] || {}; const t = new Date(); const s = mon(addD(t, -34)); let h = '';
+  'MTWTFSS'.split('').forEach(d => h += `<i>${d}</i>`);
+  for (let i = 0; i < 42; i++) {
+    const d = addD(s, i); if (d > t) break;
+    const k = iso(d), v = m[k] || 0;
+    h += `<b class="${v >= T ? 'h' : v > 0 ? 'p' : ''} ${k === iso(t) ? 't' : ''}" title="${fmt(d)}: ${v} matches">${d.getDate()}</b>`;
+  }
+  return `<div class="cal">${h}</div>`;
+}
+
+function vStreak() {
+  const L = (D.hosts || []).map(h => ({ h, s: streak(h.id) })).sort((a, b) => b.s.cur - a.s.cur || b.s.best - a.s.best);
+  return `<p style="color:var(--mut);margin-top:0">Complete at least <b style="color:var(--tx)">${T} matches/day</b> to keep your streak. Green days count.</p>` +
+  (L.length ? L.map(x => `<details><summary><span class="nm">${esc(x.h.name)}${tag(x.h)}</span><span class="fire ${x.s.cur ? '' : 'z'}">${x.s.cur ? '🔥 ' + x.s.cur + ' days' : 'No streak'}</span><small style="color:var(--mut)">best ${x.s.best}</small></summary>${cal(x.h.id)}</details>`).join('') : '<div class="empty">No hosts registered.</div>');
+}
+
+function showHost(id) {
+  const h = (D.hosts || []).find(x => x.id === id); if (!h) return;
+  const entries = (D.entries || []).filter(e => e.h === id);
+  const tm = entries.reduce((a, e) => a + (+e.m || 0), 0);
+  const te = entries.reduce((a, e) => a + (+e.e || 0), 0);
+  const st = streak(id);
+  document.getElementById('modal-container').innerHTML = `<div class="modal-bg" onclick="closeModal(event)">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <h2 style="margin:0 0 4px;color:var(--gold)">${esc(h.name)} ${tag(h)}</h2>
+      <p style="color:var(--mut);margin:0 0 16px;font-size:13px">Host Insights & Analytics</p>
+      <div class="sum" style="margin-bottom:16px">
+        <div><b>${inr(te)}</b>Lifetime Earned</div>
+        <div><b>${tm}</b>Matches</div>
+        <div><b>${st.cur}d</b>Streak</div>
+      </div>
+      <h3 style="font-size:16px;margin:12px 0 6px">Recent Activity Streak</h3>
+      ${cal(id)}
+    </div>
+  </div>`;
+}
+
+function closeModal(e) { if (!e || e.target.classList.contains('modal-bg') || e.target.classList.contains('modal-close')) document.getElementById('modal-container').innerHTML = ''; }
+
+const P = [['weekly','Weekly Leaderboard'],['lifetime','Lifetime Earnings'],['offers','Live Offers'],['streaks','Streaks']];
+function go() {
+  const p = (location.hash || '#weekly').slice(1);
+  const k = P.some(x => x[0] === p) ? p : 'weekly';
+  document.getElementById('nav').innerHTML = P.map(x => `<a href="#${x[0]}" class="${x[0]===k?'on':''}">${x[1]}</a>`).join('');
+  document.getElementById('app').innerHTML = { weekly: vWeekly, lifetime: vLife, offers: vOffers, streaks: vStreak }[k]();
+}
+
+addEventListener('hashchange', go);
+go();
+</script>
+</body>
+</html>
